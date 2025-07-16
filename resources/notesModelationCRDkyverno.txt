@@ -1,0 +1,13 @@
+schema:
+  openAPIV3Schema:
+define el inicio de la definicion de las propiedades del esquema. Se acompaña de la version a definir
+
+description y properties para cada definicion de una propiedad. La descripcion como se realizo en el de k8s
+se podria agregar como un atributo 'doc', properties sirve para saber que elemento tiene mas propiedades anidadas
+para reflejarlas. En lo que he visto se puede usar para definir profundidad en features.
+type, define el tipo de dato que se declara, util para definir el tipo de dato del feature
+enum, se puede definir como el oneOf, es decir un altenative con la seleccion de los 2 posibles valores ya que
+son valores predefinidos para utilizar/seleccionar.
+
+
+V1.

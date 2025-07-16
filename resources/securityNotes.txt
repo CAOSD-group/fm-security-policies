@@ -89,3 +89,44 @@ Terminar la comparación entre modelos -- Restricciones
 
 
 
+**** Revision CRD-Politicas de los YAMLs
+En el index de la Api del CRD de la definicion de las politicas falta contenido? En el punto ded definir las condiciones de la politica solo se muestra como una lista
+y se puede comprobar que se definen varias propiedades mas dentro de esta condicion...
+
+
+Segun la defincion del CRD creo que no deberia de ser valida (en uvl) -- Creo que se usa Go para analizar y comprobar las condiciones insertadas en el Yaml pero no se
+definen las propiedades necesarias en el CRD. Para uvl seria invalida la config al usar propiedades que no se tienen en la version
+url del yaml de ejemplo:
+https://github.com/kyverno/policies/blob/main/pod-security/baseline/disallow-capabilities/disallow-capabilities.yaml
+        deny: (ref: https://htmlpreview.github.io/?https://github.com/kyverno/kyverno/blob/main/docs/user/crd/index.html#kyverno.io/v1.Deny)
+          conditions: (ref: https://htmlpreview.github.io/?https://github.com/kyverno/kyverno/blob/main/docs/user/crd/index.html#kyverno.io/v1.ConditionsWrapper)
+            all:
+            - key: "{{ request.object.spec.[ephemeralContainers, initContainers, containers][].securityContext.capabilities.add[] }}"
+              operator: AnyNotIn
+              value:
+              - AUDIT_WRITE
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - FSETID
+              - KILL
+              - MKNOD
+              - NET_BIND_SERVICE
+              - SETFCAP
+              - SETGID
+              - SETPCAP
+              - SETUID
+              - SYS_CHROOT
+
+
+CRDs de donde se obtendran el mapeo de los esquemas de la defincion de la variabilidad kyverno...
+https://github.com/kyverno/kyverno/tree/main/config/crds
+Se diferencia entre el CRD y las politicas de Kyverno.
+
+Primer YAML a probar:
+https://github.com/kyverno/kyverno/blob/main/config/crds/kyverno/kyverno.io_clusterpolicies.yaml
+
+Se tratara de desarrollar un script para mapear automaticamente la definicion de los YAML para obtener
+el fm de dichos schemas
+
+
