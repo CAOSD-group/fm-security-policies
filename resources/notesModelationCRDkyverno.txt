@@ -1,3 +1,6 @@
+Modelado de los CRDs de kyverno definidos en:
+https://github.com/kyverno/kyverno/tree/main/config/crds
+
 schema:
   openAPIV3Schema:
 define el inicio de la definicion de las propiedades del esquema. Se acompaña de la version a definir
@@ -11,3 +14,78 @@ son valores predefinidos para utilizar/seleccionar.
 
 
 V1.
+generate_uvl_from_crd_yaml.py
+First version to convert CRDs definitions of kyverno to a valid fm
+
+-- Hecho
+Se define al final del todo del Objeto del schema, se necesita agregar el required del spec. 
+                required:
+                - generated
+                - message
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+-- Hecho
+
+-- Hecho
+Al tener enum y el tipo de la propiedad String hay que modificar manualmente el tipo de dato del feature para que sea Bool
+y permitir la seleccion entre estos 2 valores predefinidos que tambien son Bool.
+
+                enum:
+                - All
+                - One
+                type: string
+-- Hecho
+-- Hecho
+Eliminar los Boolean, en uvl no hace falta mostra el tipeo. Si se añade sin tipo ya se toma por defecto como bool
+-- Hecho
+Revisar como se usa y define el "items:". No es una propiedad, parece mas bien algo similar a que se define un comportamiento
+secundario de la propiedad principal. Podria ser facilmente para definir una prop como Array, se parece al items de k8s, omitir
+su representacion y usarlo como marca de Array--cardinality
+              rules:
+                description: |-
+                  Rules is a list of Rule instances. A Policy contains multiple rules and
+                  each rule can validate, mutate, or generate resources.
+                items:
+
+-- Hecho
+
+Expresion para buscar los arrays de strings; items:\s*\n\s*type:\s*string
+
+items:  
+  type: string
+
+not:
+
+
+                    context:
+                      description: Context defines variables and data sources that
+                        can be used during rule execution.
+                      items:
+                        description: |-
+                          ContextEntry adds variables and data sources to a rule Context. Either a
+                          ConfigMap reference or a APILookup must be provided.
+                        oneOf:
+                        - required:
+                          - configMap
+                        - required:
+                          - apiCall
+                        - required:
+                          - imageRegistry
+                        - required:
+                          - variable
+                        - required:
+                          - globalReference
+                        properties:
+                          apiCall:
+                            description: |-
+
+
+
+Por el momento la 1ºV parece que es válida
+(flamapyenv02) PS C:\Users\CAOSD\projects\fm-json-kubernetes\scripts\ci> py .\valid_model.py v1.30.2.kyverno
+🧪 Validating model for v1.30.2.kyverno...
+✅ Model is valid.
+(flamapyenv02) PS C:\Users\CAOSD\projects\fm-json-kubernetes\scripts\ci> 

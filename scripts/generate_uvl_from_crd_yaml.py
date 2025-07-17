@@ -2,10 +2,10 @@ import yaml
 import os
 
 def sanitize(name):
-    return name.replace("-", "_").replace(".", "_").replace("/", "_")
+    return name.replace("-", "_").replace(".", "_").replace("/", "").replace(" ", "_")
 
 def clean_description(description: str) -> str:
-    return description.replace('\n', '') \
+    return description.replace('\n', ' ') \
                       .replace('`', '') \
                       .replace('´', '') \
                       .replace("'", "_") \
@@ -20,7 +20,7 @@ def render_feature(entry, indent=2):
     i = "\t" * indent
     lines = []
 
-    typename = entry.get("type", "Boolean").capitalize()
+    typename = "" if entry.get("type") in ["object", "array", ""] else entry.get("type", "").capitalize()
     name = sanitize(entry["name"])
     doc = entry.get("description", "")
     default = entry.get("default")
@@ -28,21 +28,28 @@ def render_feature(entry, indent=2):
     children = entry.get("children", [])
 
     attributes = []
-    if doc:
-      attributes.append(f'doc "{clean_description(doc.strip())}"')
     if default is not None:
-      val = str(default).lower() if isinstance(default, bool) else f'"{default}"'
-      attributes.append(f'default {val}')
+        val = str(default).lower() if isinstance(default, bool) else f"'{default}'"
+        attributes.append(f'default {val}')
+
+    if doc:
+        attributes.append(f"doc '{clean_description(doc.strip())}'")
     attr_str = f" {{{', '.join(attributes)}}}" if attributes else ""
 
-    lines.append(f"{i}{typename} {name}{attr_str}")
+    if entry.get("cardinality"):
+        lines.append(f"{i}{name} cardinality {entry['cardinality']}{attr_str}")
+    else:
+        if typename and typename != 'Boolean' and not enum:
+            lines.append(f"{i}{typename} {name}{attr_str}")
+        else:
+            lines.append(f"{i}{name}{attr_str}")
 
     if enum:
         lines.append(i + "\talternative")
         for val in enum:
             enum_val = sanitize(f"{name}_{val}")
-            lines.append(f"{i}\t\tString {enum_val}")
-    
+            lines.append(f"{i}\t\t{enum_val}")
+
     if children:
         mand = [c for c in children if c.get("required")]
         opt = [c for c in children if not c.get("required")]
@@ -54,7 +61,7 @@ def render_feature(entry, indent=2):
             lines.append(i + "\toptional")
             for c in opt:
                 lines.extend(render_feature(c, indent + 2))
-    
+
     return lines
 
 def extract_features(schema, parent_name="", required_fields=None):
@@ -70,15 +77,30 @@ def extract_features(schema, parent_name="", required_fields=None):
             "default": value.get("default"),
             "enum": value.get("enum", []),
             "required": key in required_fields,
-            "children": []
+            "children": [],
         }
 
         if value.get("type") == "object" and "properties" in value:
             feature["children"] = extract_features(value, feature["name"], value.get("required", []))
         elif value.get("type") == "array" and "items" in value:
+            feature["cardinality"] = "[1..*]"
             item = value["items"]
+            # Subir enum si está dentro de items
+            if "enum" in item:
+                feature["enum"] = item["enum"]
+
+            # Special case: array of strings, we can consider the option String _secrets cardinality [1..*] directly?: omitting the sub-tree...
+            elif item.get("type") == "string":
+                feature["children"] = [{
+                    "name": feature["name"] + "_StringValue",
+                    "type": "String",
+                    "description": "Added String mandatory for complete structure Array in the model. The modified is not in json but provides representation of Array of Strings: StringValue",
+                    "required": True,
+                    "children": []
+                }]
+
             if item.get("type") == "object" and "properties" in item:
-                feature["children"] = extract_features(item, feature["name"] + "_item", item.get("required", []))
+                feature["children"] = extract_features(item, feature["name"], item.get("required", []))
         features.append(feature)
 
     return features
@@ -88,32 +110,43 @@ def generate_uvl_from_crd(yaml_path, output_path):
         crd = yaml.safe_load(f)
 
     kind = crd.get("spec", {}).get("names", {}).get("kind", "UnknownKind")
-    version = crd.get("spec", {}).get("versions", [{}])[0].get("name", "v1")
     group = crd.get("spec", {}).get("group", "unknown.group")
-    openapi = crd.get("spec", {}).get("versions", [{}])[0].get("schema", {}).get("openAPIV3Schema", {})
-    root_name = sanitize(f"{group}_{version}_{kind}")
+    namespace_name = sanitize(group)
+    feature_lines = [f"namespace {namespace_name}", "features", "\tKyvernoClusterPolicies {abstract}", "\t\toptional"]
 
-    features = extract_features(openapi, root_name, openapi.get("required", []))
+    for version_entry in crd.get("spec", {}).get("versions", []):
+        version = version_entry.get("name", "v1")
+        openapi = version_entry.get("schema", {}).get("openAPIV3Schema", {})
+        root_name = sanitize(f"{group}_{version}_{kind}")
+        doc = openapi.get("description", "")
+        features = extract_features(openapi, root_name, openapi.get("required", []))
 
-    # UVL root
-    lines = [f"namespace {sanitize(group)}", "features", "\tClusterPolicies {abstract}", "\t\toptional"]
-    lines.append(f"\t\t{root_name} {{doc \"{openapi.get('description', '').strip()}\"}}")
-    lines.append("\t\t\toptional")
+        feature_lines.append(f"\t\t\t{root_name} {{doc \'{clean_description(doc)}\'}}")
 
-    for feature in features:
-        lines.extend(render_feature(feature, indent=4))
+        mandatory = [f for f in features if f.get("required")]
+        optional = [f for f in features if not f.get("required")]
 
-    # Write to file
+        if mandatory:
+            feature_lines.append("\t\t\t\tmandatory")
+            for feature in mandatory:
+                feature_lines.extend(render_feature(feature, indent=5))
+        if optional:
+            feature_lines.append("\t\t\t\toptional")
+            for feature in optional:
+                feature_lines.extend(render_feature(feature, indent=5))
+        """feature_lines.append("\t\t\t\toptional")
+        for feature in features:
+            feature_lines.extend(render_feature(feature, indent=5))"""
+        
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
+        f.write("\n".join(feature_lines))
 
     print(f"✅ UVL generado: {output_path}")
 
-
-# 🔧 Uso
+# Uso de prueba:
 if __name__ == "__main__":
     generate_uvl_from_crd(
         yaml_path="../resources/kyverno_crds_definitions/kyverno.io_clusterpolicies.yaml",
-        output_path="../variability_model/kyverno_clusterpolicy_test1.uvl"
+        output_path="../variability_model/kyverno_clusterpolicy_test2.uvl"
     )

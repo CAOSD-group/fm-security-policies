@@ -129,4 +129,5 @@ https://github.com/kyverno/kyverno/blob/main/config/crds/kyverno/kyverno.io_clus
 Se tratara de desarrollar un script para mapear automaticamente la definicion de los YAML para obtener
 el fm de dichos schemas
 
-
+uvl papers:
+https://idus.us.es/server/api/core/bitstreams/6276afa7-89bf-4c80-9882-81905307e97d/content
