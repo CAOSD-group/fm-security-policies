@@ -56,8 +56,16 @@ Expresion para buscar los arrays de strings; items:\s*\n\s*type:\s*string
 
 items:  
   type: string
+--
 
+Definir el not... como una constraint de exclusion mutua, donde se podria traducir a:
+!(name & names)
+name => !names | names => !name
 not:
+  required:
+  - name
+  - names
+
 
 
                     context:
@@ -82,6 +90,11 @@ not:
                           apiCall:
                             description: |-
 
+oneOf se traduce a alterenative tambien, al solo declarar una de las propiedades en cada required se da por hecho que solo se seleccionaria una
+: similar a modelar alternativas excluyentes. Cambiaria si en el required se definieran mas propiedades. Ex required: [configMap, apiCall]
+
+**Dude: Se puede definir un alternative + mandatory?
+alternative puede tener sub-features?
 
 
 Por el momento la 1ºV parece que es válida

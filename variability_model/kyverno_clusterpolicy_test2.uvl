@@ -199,7 +199,7 @@ features
 									kyverno_io_v1_ClusterPolicy_spec_rules_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 										mandatory
 											String kyverno_io_v1_ClusterPolicy_spec_rules_context_name {doc 'Name is the variable name'}
-										optional
+										alternative
 											kyverno_io_v1_ClusterPolicy_spec_rules_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 												optional
 													kyverno_io_v1_ClusterPolicy_spec_rules_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -475,7 +475,7 @@ features
 													kyverno_io_v1_ClusterPolicy_spec_rules_generate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v1_ClusterPolicy_spec_rules_generate_foreach_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v1_ClusterPolicy_spec_rules_generate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v1_ClusterPolicy_spec_rules_generate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -600,7 +600,7 @@ features
 													kyverno_io_v1_ClusterPolicy_spec_rules_mutate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v1_ClusterPolicy_spec_rules_mutate_foreach_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v1_ClusterPolicy_spec_rules_mutate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v1_ClusterPolicy_spec_rules_mutate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -721,7 +721,7 @@ features
 													kyverno_io_v1_ClusterPolicy_spec_rules_mutate_targets_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v1_ClusterPolicy_spec_rules_mutate_targets_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v1_ClusterPolicy_spec_rules_mutate_targets_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v1_ClusterPolicy_spec_rules_mutate_targets_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -874,7 +874,7 @@ features
 													kyverno_io_v1_ClusterPolicy_spec_rules_validate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v1_ClusterPolicy_spec_rules_validate_foreach_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v1_ClusterPolicy_spec_rules_validate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v1_ClusterPolicy_spec_rules_validate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -1566,7 +1566,7 @@ features
 											kyverno_io_v1_ClusterPolicy_status_autogen_rules_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 												mandatory
 													String kyverno_io_v1_ClusterPolicy_status_autogen_rules_context_name {doc 'Name is the variable name'}
-												optional
+												alternative
 													kyverno_io_v1_ClusterPolicy_status_autogen_rules_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 														optional
 															kyverno_io_v1_ClusterPolicy_status_autogen_rules_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -1842,7 +1842,7 @@ features
 															kyverno_io_v1_ClusterPolicy_status_autogen_rules_generate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v1_ClusterPolicy_status_autogen_rules_generate_foreach_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v1_ClusterPolicy_status_autogen_rules_generate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v1_ClusterPolicy_status_autogen_rules_generate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -1967,7 +1967,7 @@ features
 															kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_foreach_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -2088,7 +2088,7 @@ features
 															kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_targets_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_targets_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_targets_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v1_ClusterPolicy_status_autogen_rules_mutate_targets_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -2241,7 +2241,7 @@ features
 															kyverno_io_v1_ClusterPolicy_status_autogen_rules_validate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v1_ClusterPolicy_status_autogen_rules_validate_foreach_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v1_ClusterPolicy_status_autogen_rules_validate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v1_ClusterPolicy_status_autogen_rules_validate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -2871,7 +2871,7 @@ features
 									kyverno_io_v2beta1_ClusterPolicy_spec_rules_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 										mandatory
 											String kyverno_io_v2beta1_ClusterPolicy_spec_rules_context_name {doc 'Name is the variable name'}
-										optional
+										alternative
 											kyverno_io_v2beta1_ClusterPolicy_spec_rules_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 												optional
 													kyverno_io_v2beta1_ClusterPolicy_spec_rules_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -3093,7 +3093,7 @@ features
 													kyverno_io_v2beta1_ClusterPolicy_spec_rules_generate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v2beta1_ClusterPolicy_spec_rules_generate_foreach_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v2beta1_ClusterPolicy_spec_rules_generate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v2beta1_ClusterPolicy_spec_rules_generate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -3218,7 +3218,7 @@ features
 													kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_foreach_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -3339,7 +3339,7 @@ features
 													kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_targets_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_targets_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_targets_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v2beta1_ClusterPolicy_spec_rules_mutate_targets_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -3576,7 +3576,7 @@ features
 													kyverno_io_v2beta1_ClusterPolicy_spec_rules_validate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 														mandatory
 															String kyverno_io_v2beta1_ClusterPolicy_spec_rules_validate_foreach_context_name {doc 'Name is the variable name'}
-														optional
+														alternative
 															kyverno_io_v2beta1_ClusterPolicy_spec_rules_validate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																optional
 																	kyverno_io_v2beta1_ClusterPolicy_spec_rules_validate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -4260,7 +4260,7 @@ features
 											kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 												mandatory
 													String kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_context_name {doc 'Name is the variable name'}
-												optional
+												alternative
 													kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 														optional
 															kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -4536,7 +4536,7 @@ features
 															kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_generate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_generate_foreach_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_generate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_generate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -4661,7 +4661,7 @@ features
 															kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_foreach_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -4782,7 +4782,7 @@ features
 															kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_targets_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_targets_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_targets_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_mutate_targets_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}
@@ -4935,7 +4935,7 @@ features
 															kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_validate_foreach_context cardinality [1..*] {doc 'Context defines variables and data sources that can be used during rule execution'}
 																mandatory
 																	String kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_validate_foreach_context_name {doc 'Name is the variable name'}
-																optional
+																alternative
 																	kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_validate_foreach_context_apiCall {doc 'APICall is an HTTP request to the Kubernetes API server, or other JSON web service The data returned is stored in the context with the name for the context entry'}
 																		optional
 																			kyverno_io_v2beta1_ClusterPolicy_status_autogen_rules_validate_foreach_context_apiCall_data cardinality [1..*] {doc 'The data object specifies the POST data sent to the server Only applicable when the method field is set to POST'}

@@ -49,7 +49,7 @@ def render_feature(entry, indent=2):
         for val in enum:
             enum_val = sanitize(f"{name}_{val}")
             lines.append(f"{i}\t\t{enum_val}")
-
+    
     if children:
         mand = [c for c in children if c.get("required")]
         opt = [c for c in children if not c.get("required")]
@@ -58,7 +58,10 @@ def render_feature(entry, indent=2):
             for c in mand:
                 lines.extend(render_feature(c, indent + 2))
         if opt:
-            lines.append(i + "\toptional")
+            if 'oneOf' in entry: ## Detect if the property contains a oneOf
+                lines.append(i + "\talternative") ## Put alternative againts opcional
+            else:
+                lines.append(i + "\toptional")
             for c in opt:
                 lines.extend(render_feature(c, indent + 2))
 
@@ -85,6 +88,17 @@ def extract_features(schema, parent_name="", required_fields=None):
         elif value.get("type") == "array" and "items" in value:
             feature["cardinality"] = "[1..*]"
             item = value["items"]
+
+            # Detection of oneOf in the item...
+            if 'oneOf' in item:
+                #print(f"✔️ oneOf detectado en array: {feature['name']}")
+                simple_required = []
+                for branch in item["oneOf"]:
+                    if "required" in branch and len(branch["required"]) == 1:
+                        simple_required.append(branch["required"][0])
+                if len(simple_required) >= 2:
+                    feature["oneOf"] = simple_required
+                
             # Subir enum si está dentro de items
             if "enum" in item:
                 feature["enum"] = item["enum"]
@@ -147,6 +161,8 @@ def generate_uvl_from_crd(yaml_path, output_path):
 # Uso de prueba:
 if __name__ == "__main__":
     generate_uvl_from_crd(
-        yaml_path="../resources/kyverno_crds_definitions/kyverno.io_clusterpolicies.yaml",
-        output_path="../variability_model/kyverno_clusterpolicy_test2.uvl"
+        #yaml_path="../resources/kyverno_crds_definitions/kyverno.io_clusterpolicies.yaml",
+        yaml_path="../resources/kyverno_crds_definitions/policies.kyverno.io_validatingpolicies.yaml",
+        ## policies.kyverno.io_validatingpolicies
+        output_path="../variability_model/kyverno_validatingpolicies_test1.uvl"
     )
