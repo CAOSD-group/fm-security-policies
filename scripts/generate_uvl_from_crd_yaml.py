@@ -85,10 +85,16 @@ def extract_features(schema, parent_name="", required_fields=None):
 
         if value.get("type") == "object" and "properties" in value:
             feature["children"] = extract_features(value, feature["name"], value.get("required", []))
+        elif value.get("type") == "object" and "additionalProperties" in value:
+            ap = value["additionalProperties"]
+            if "properties" in ap:
+                feature["children"] = extract_features(ap, feature["name"],  ap.get("required", []))
+            elif "items" in ap and isinstance(ap["items"], dict):
+                feature["cardinality"] = "[1..*]"
+                feature["children"] = extract_features(ap["items"], feature["name"], ap["items"].get("required", []))
         elif value.get("type") == "array" and "items" in value:
             feature["cardinality"] = "[1..*]"
             item = value["items"]
-
             # Detection of oneOf in the item...
             if 'oneOf' in item:
                 #print(f"✔️ oneOf detectado en array: {feature['name']}")
@@ -161,8 +167,8 @@ def generate_uvl_from_crd(yaml_path, output_path):
 # Uso de prueba:
 if __name__ == "__main__":
     generate_uvl_from_crd(
-        #yaml_path="../resources/kyverno_crds_definitions/kyverno.io_clusterpolicies.yaml",
-        yaml_path="../resources/kyverno_crds_definitions/policies.kyverno.io_validatingpolicies.yaml",
+        yaml_path="../resources/kyverno_crds_definitions/kyverno.io_clusterpolicies.yaml",
+        #yaml_path="../resources/kyverno_crds_definitions/policies.kyverno.io_validatingpolicies.yaml",
         ## policies.kyverno.io_validatingpolicies
-        output_path="../variability_model/kyverno_validatingpolicies_test1.uvl"
+        output_path="../variability_model/kyverno_clusterpolicy_test2.uvl"
     )

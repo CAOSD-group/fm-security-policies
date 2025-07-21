@@ -1,0 +1,15 @@
+namespace PoliciesKyverno
+features
+	Policies {abstract}
+		optional
+			Pod_Security_Standards_(Baseline)
+				optional
+					Disallow_Host_Namespaces {doc 'Host namespaces (Process ID namespace, Inter-Process Communication namespace, and network namespace) allow access to shared information and can be used to elevate privileges. Pods should not be allowed access to host namespaces. This policy ensures fields which make use of these host namespaces are unset or set to `false`.'}
+					Disallow_Privileged_Containers {doc 'Privileged mode disables most security mechanisms and must not be allowed. This policy ensures Pods do not call for privileged mode.'}
+constraints
+	disallow_host_namespaces → io_k8s_api_core_v1_Pod_spec_hostPID == false
+	disallow_host_namespaces → io_k8s_api_core_v1_Pod_spec_hostIPC == false
+	disallow_host_namespaces → io_k8s_api_core_v1_Pod_spec_hostNetwork == false
+	disallow_privileged_containers → io_k8s_api_core_v1_Pod_spec_ephemeralContainers_securityContext_privileged == false
+	disallow_privileged_containers → io_k8s_api_core_v1_Pod_spec_initContainers_securityContext_privileged == false
+	disallow_privileged_containers → io_k8s_api_core_v1_Pod_spec_containers_securityContext_privileged == false

@@ -96,7 +96,32 @@ oneOf se traduce a alterenative tambien, al solo declarar una de las propiedades
 **Dude: Se puede definir un alternative + mandatory?
 alternative puede tener sub-features?
 
+-- Hecho
+Hay 2 tipos de additionalProperties, falta definir que tambien sirve para representar mas props bajo el additional...
 
+...validatingpolicies.yaml:
+          status:
+            description: Status contains policy runtime data.
+            properties:
+              autogen:
+                properties:
+                  configs:
+                    additionalProperties:
+                      properties:
+                        spec:
+                          description: ValidatingPolicySpec is the specification of
+                            the desired behavior of the ValidatingPolicy.
+                          properties:
+
+Caso del ClusterPolicy:
+                        imageExtractors:
+                          additionalProperties:
+                            items:
+                              properties:
+                                jmesPath:
+                                  description: |-
+                                  
+-- Hecho
 Por el momento la 1ºV parece que es válida
 (flamapyenv02) PS C:\Users\CAOSD\projects\fm-json-kubernetes\scripts\ci> py .\valid_model.py v1.30.2.kyverno
 🧪 Validating model for v1.30.2.kyverno...
