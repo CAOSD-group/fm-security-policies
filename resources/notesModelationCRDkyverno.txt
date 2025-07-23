@@ -143,6 +143,16 @@ el spec... se traduce encadenando props e igualando al valor...
 deny: ## Parece que define condiciones mas "complejas" que requieren de un mayor analisis
 Restricciones de rangos, lista de valores no permitidos...
 
+
+
+Integer Pod_spec_containers_ports_hostPort
+Integer io_k8s_api_core_v1_Pod_spec_ephemeralContainers_ports_hostPort {doc 'Number of port to expose on the host If specified, this must be a valid port number, 0 < x < 65536 If HostNetwork is specified, this must match ContainerPort Most containers do not need this'}
+Integer io_k8s_api_core_v1_Pod_spec_initContainers_ports_hostPort {doc 'Number of port to expose on the host If specified, this must be a valid port number, 0 < x < 65536 If HostNetwork is specified, this must match ContainerPort Most containers do not need this'}
+
+
+io_k8s_api_core_v1_Pod_spec_securityContext_windowsOptions_hostProcess {doc 'HostProcess determines if a container should be run as a _Host Process_ container All of a Pod_s containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers) In addition, if HostProcess is true then HostNetwork must also be set to true'}
+
+
 -- Hecho
 Por el momento la 1ºV parece que es válida
 (flamapyenv02) PS C:\Users\CAOSD\projects\fm-json-kubernetes\scripts\ci> py .\valid_model.py v1.30.2.kyverno

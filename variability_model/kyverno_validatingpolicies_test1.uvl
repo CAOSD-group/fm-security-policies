@@ -1,4 +1,4 @@
-namespace policies_kyverno_io
+namespace policies_kyverno_io2
 features
 	KyvernoValidatingPolicies {abstract}
 		optional

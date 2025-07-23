@@ -3,10 +3,19 @@ import yaml
 import re
 
 def sanitize(name):
-    return name.replace("-", "_").replace(".", "_").replace("/", "_").replace(" ", "_").replace("{{", "").replace("}}", "")
+    return name.replace("-", "_").replace(".", "_").replace("/", "_").replace(" ", "_").replace("{{", "").replace("}}", "").replace("(", "").replace(")", "")
 
 def clean_description(description: str) -> str:
-    return description.replace("\n", " ").replace("'", "_")
+    return description.replace('\n', ' ') \
+                      .replace('`', '') \
+                      .replace('´', '') \
+                      .replace("'", "_") \
+                      .replace('{', '') \
+                      .replace('}', '') \
+                      .replace('"', '') \
+                      .replace("\\", "_") \
+                      .replace(".", "") \
+                      .replace("//", "_")
 
 def extract_policy_info(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -153,22 +162,35 @@ def extract_conditions_from_spec(obj, prefix="spec"):
     conditions = []
     if isinstance(obj, dict):
         for k, v in obj.items():
+            ##print(f"Key value   {k}   {v}")
             key = k.strip("=() ").replace("X(", "").replace(")", "")
             new_prefix = f"{prefix}_{key}"
             if isinstance(v, dict):
                 conditions.extend(extract_conditions_from_spec(v, new_prefix))
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                print(f"Valor elif  {v}")
                 conditions.extend(extract_conditions_from_spec(v[0], new_prefix))
             else:
-                if isinstance(v, str) and v.lower() == "false":
-                    v = "false"
-                elif isinstance(v, str) and v.lower() == "true":
-                    v = "true"
-                elif isinstance(v, str):
-                    if v.strip().lower() == "null":
+                if isinstance(v, str):
+                    if v.lower() == "false":
+                        v = "false"
+                    elif v.lower() == "true":
+                        v = "true"
+                    elif v.strip().lower() == "null":
                         v = "null"
+                    elif v.isdigit():
+                        v = v  # número como string, no cambiar
                     else:
                         v = f"'{v}'"
+                elif v == 0:
+                    print(f"Caso aqui   {k}   {v}")
+
+                elif isinstance(v, (int, float)):
+                    v = str(v)
+                else:
+                    # fallback por seguridad
+                    print(f"Valor else {v}")
+                    v = f"'{str(v)}'"
                 conditions.append((new_prefix, v))
     return conditions
 
@@ -219,20 +241,21 @@ def generate_uvl_from_policies(directory, output_path):
                 merged.setdefault(policy_name, []).extend(exprs)
 
         for policy_name, exprs in merged.items():
-            if len(exprs) == 1:
-                lines.append(f"\t{policy_name} → {exprs[0]}")
-            else:
-                # Check if ALL expressions use OR internally (e.g., "(... | ...)")
-                all_are_or_exprs = all(expr.startswith("(") and " | " in expr for expr in exprs)
-                if all_are_or_exprs:
-                    combined = " | ".join(exprs)
-                    lines.append(f"\t{policy_name} → {combined}")
+            # Reemplazar '= false' por negación
+            normalized_exprs = []
+            for expr in exprs:
+                if expr.endswith("= false"):
+                    normalized_exprs.append(f"!{expr.replace(' = false', '')}")
                 else:
-                    lines.append(f"\t{policy_name} → (")
-                    for i, expr in enumerate(exprs):
-                        sep = " &" if i < len(exprs) - 1 else ""
-                        lines.append(f"\t{expr}{sep}")
-                    lines.append("\t)")
+                    normalized_exprs.append(expr)
+
+            # Concatenar en una sola línea, agrupando con & si es necesario
+            if len(normalized_exprs) == 1:
+                constraint = normalized_exprs[0]
+            else:
+                constraint = f"({' & '.join(normalized_exprs)})"
+
+            lines.append(f"\t{policy_name} => {constraint}")
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
