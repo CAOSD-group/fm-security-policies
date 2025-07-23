@@ -1,8 +1,9 @@
 import os
 import yaml
+import re
 
 def sanitize(name):
-    return name.replace("-", "_").replace(".", "_").replace("/", "_").replace(" ", "_")
+    return name.replace("-", "_").replace(".", "_").replace("/", "_").replace(" ", "_").replace("{{", "").replace("}}", "")
 
 def clean_description(description: str) -> str:
     return description.replace("\n", " ").replace("'", "_")
@@ -11,8 +12,8 @@ def extract_policy_info(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         policy = yaml.safe_load(f)
 
-    metadata = policy.get("metadata", {})
-    annotations = metadata.get("annotations", {})
+        metadata = policy.get("metadata", {})
+        annotations = metadata.get("annotations", {})
     name = metadata.get("name", "")
     title = annotations.get("policies.kyverno.io/title", name)
     category = annotations.get("policies.kyverno.io/category", "Uncategorized")
@@ -28,51 +29,148 @@ def extract_constraints_from_policy(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         policy = yaml.safe_load(f)
 
-    constraints = []
-
     metadata = policy.get("metadata", {})
     annotations = metadata.get("annotations", {})
-    name = sanitize(metadata.get("name", ""))
-    #category = sanitize(annotations.get("policies.kyverno.io/category", "Uncategorized"))
-    #title = sanitize(annotations.get("policies.kyverno.io/title", name))
+    title = annotations.get("policies.kyverno.io/title", metadata.get("name", ""))
+    name = sanitize(title)
 
-    ## policy_feature = f"{category}_{title}"
+    grouped_conditions = {}  # policy_name → list of conditions
 
     rules = policy.get("spec", {}).get("rules", [])
     for rule in rules:
         kinds = rule.get("match", {}).get("any", [{}])[0].get("resources", {}).get("kinds", [])
-        kind_prefixes = [f"io_k8s_api_core_v1_{sanitize(kind)}_" for kind in kinds] ## Defined by the examples v1_Pod..
+        kind_prefixes = [f"io_k8s_api_core_v1_{sanitize(kind)}_" for kind in kinds]
         pattern = rule.get("validate", {}).get("pattern", {})
+
         if "spec" in pattern:
             conditions = extract_conditions_from_spec(pattern["spec"], prefix="spec")
             for path, expected in conditions:
                 for kind_prefix in kind_prefixes:
                     full_feature = sanitize(kind_prefix + path)
-                    constraint = f"{name} → {full_feature} == {expected}"
-                    constraints.append(constraint)
+                    if expected == "null":
+                        expr = f"!{full_feature}"
+                    elif expected in ("true", "false"):
+                        expr = f"{full_feature} = {expected}"
+                    else:
+                        expr = f"{full_feature} == {expected}"
+                    grouped_conditions.setdefault(name, []).append(expr)
 
-    return constraints
+    return grouped_conditions
+
+def extract_constraints_from_deny_conditions(policy):
+    constraints_by_policy = {}
+    metadata = policy.get("metadata", {})
+    annotations = metadata.get("annotations", {})
+    title = annotations.get("policies.kyverno.io/title", metadata.get("name", ""))
+    policy_feature = sanitize(title)
+
+    rules = policy.get("spec", {}).get("rules", [])
+    for rule in rules:
+        deny = rule.get("validate", {}).get("deny", {})
+        conditions_block = deny.get("conditions", {})
+
+        if isinstance(conditions_block, dict) and "all" in conditions_block:
+            conditions = conditions_block["all"]
+        else:
+            conditions = conditions_block
+
+        kinds = rule.get("match", {}).get("any", [{}])[0].get("resources", {}).get("kinds", [])
+        kind_prefixes = [f"io_k8s_api_core_v1_{sanitize(kind)}_" for kind in kinds]
+
+        # ⬇️ Mueve aquí la acumulación por feature
+        exprs_by_feature = {}
+
+        for cond in conditions:
+            if not isinstance(cond, dict):
+                continue
+
+            key = cond.get("key", "")
+            operator = cond.get("operator", "")
+            values = cond.get("value", [])
+
+            if isinstance(values, str):
+                values = [values]
+
+            if "spec." in key:
+                raw_path = key.split("request.object.")[-1]
+                raw_path = raw_path.replace("{{", "").replace("}}", "").strip()
+                expanded_paths = expand_path_brackets(raw_path)
+
+                for kind_prefix in kind_prefixes:
+                    for path in expanded_paths:
+                        sanitized_path = sanitize(path)
+                        feature_base = kind_prefix + sanitized_path
+                        if feature_base.endswith("_"):
+                            feature_base = feature_base[:-1]
+
+                        for v in values:
+                            if operator == "AnyNotIn":
+                                if isinstance(v, str) and "-" in v:
+                                    try:
+                                        start, end = v.split("-")
+                                        start = int(start) - 1
+                                        end = int(end) + 1
+                                        condition = f"({feature_base} > {start} & {feature_base} < {end})"
+                                    except ValueError:
+                                        continue
+                                else:
+                                    condition = f"{feature_base} = {v}"
+                                exprs_by_feature.setdefault(feature_base, []).append(condition)
+
+        # ✅ Agrupa correctamente todas las expresiones por feature
+        all_exprs = []
+        for base, conds in exprs_by_feature.items():
+            if len(conds) > 1:
+                all_exprs.append(f"({' | '.join(conds)})")
+            elif conds:
+                all_exprs.append(conds[0])
+
+        if all_exprs:
+            if len(all_exprs) > 1:
+                combined = f"({' & '.join(all_exprs)})"
+            else:
+                combined = all_exprs[0]
+            constraints_by_policy.setdefault(policy_feature, []).append(combined)
+
+    return constraints_by_policy
+
+def expand_path_brackets(path):
+    def expand(p):
+        m = re.search(r'\[([^\]]+)\]', p)
+        if not m:
+            return [p.replace("[]", "")]
+        pre = p[:m.start()]
+        post = p[m.end():]
+        options = [opt.strip() for opt in m.group(1).split(',')]
+        expanded = []
+        for opt in options:
+            expanded += expand(pre + opt + post)
+        return expanded
+
+    return expand(path)
 
 def extract_conditions_from_spec(obj, prefix="spec"):
     conditions = []
     if isinstance(obj, dict):
         for k, v in obj.items():
-            key = k.lstrip("=(").rstrip(")")
+            key = k.strip("=() ").replace("X(", "").replace(")", "")
             new_prefix = f"{prefix}_{key}"
             if isinstance(v, dict):
                 conditions.extend(extract_conditions_from_spec(v, new_prefix))
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                 conditions.extend(extract_conditions_from_spec(v[0], new_prefix))
             else:
-                # Convert "false" to false (boolean) for UVL
                 if isinstance(v, str) and v.lower() == "false":
                     v = "false"
                 elif isinstance(v, str) and v.lower() == "true":
                     v = "true"
+                elif isinstance(v, str):
+                    if v.strip().lower() == "null":
+                        v = "null"
+                    else:
+                        v = f"'{v}'"
                 conditions.append((new_prefix, v))
     return conditions
-
-
 
 def generate_uvl_from_policies(directory, output_path):
     category_map = {}
@@ -110,11 +208,31 @@ def generate_uvl_from_policies(directory, output_path):
     for filename in os.listdir(directory):
         if not filename.endswith(".yaml") and not filename.endswith(".yml"):
             continue
-        filepath = os.path.join(directory, filename)
-        constraints = extract_constraints_from_policy(filepath)
-        for c in constraints:
-            lines.append(f"\t{c}")
 
+        filepath = os.path.join(directory, filename)
+        grouped = extract_constraints_from_policy(filepath)
+        grouped_deny = extract_constraints_from_deny_conditions(yaml.safe_load(open(filepath)))
+
+        merged = {}
+        for g in [grouped, grouped_deny]:
+            for policy_name, exprs in g.items():
+                merged.setdefault(policy_name, []).extend(exprs)
+
+        for policy_name, exprs in merged.items():
+            if len(exprs) == 1:
+                lines.append(f"\t{policy_name} → {exprs[0]}")
+            else:
+                # Check if ALL expressions use OR internally (e.g., "(... | ...)")
+                all_are_or_exprs = all(expr.startswith("(") and " | " in expr for expr in exprs)
+                if all_are_or_exprs:
+                    combined = " | ".join(exprs)
+                    lines.append(f"\t{policy_name} → {combined}")
+                else:
+                    lines.append(f"\t{policy_name} → (")
+                    for i, expr in enumerate(exprs):
+                        sep = " &" if i < len(exprs) - 1 else ""
+                        lines.append(f"\t{expr}{sep}")
+                    lines.append("\t)")
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
@@ -124,6 +242,6 @@ def generate_uvl_from_policies(directory, output_path):
 # Ejemplo de uso
 if __name__ == "__main__":
     generate_uvl_from_policies(
-        directory="../resources/kyverno_policies_yamls",  # 📂 Carpeta con YAMLs de políticas
+        directory="../resources/kyverno_policies_yamls",
         output_path="../variability_model/policies_template/policy_structure.uvl"
     )

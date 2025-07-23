@@ -120,7 +120,29 @@ Caso del ClusterPolicy:
                               properties:
                                 jmesPath:
                                   description: |-
-                                  
+
+metadata se usa en la definicion de las politicas de kyverno, segun pone en la doc es una referencia de metadata de k8s.
+Hacer import del objeto de k8s? 
+metadata:
+  name: disallow-host-namespaces
+  annotations:                
+
+En los CRD: 
+          metadata:
+            type: object
+
+Pero en la documentacion de la web se especifica, aunque la ref esta rota
+metadata
+Kubernetes meta/v1.ObjectMeta	Refer to the Kubernetes API documentation for the fields of the metadata field.
+
+Propiedades clave para las restricciones de las politicas.
+
+validate: ## Define casos de validacion, suelen ser comprobaciones de valores = o ==, faciles de traducir siguiendo
+el spec... se traduce encadenando props e igualando al valor...
+
+deny: ## Parece que define condiciones mas "complejas" que requieren de un mayor analisis
+Restricciones de rangos, lista de valores no permitidos...
+
 -- Hecho
 Por el momento la 1ºV parece que es válida
 (flamapyenv02) PS C:\Users\CAOSD\projects\fm-json-kubernetes\scripts\ci> py .\valid_model.py v1.30.2.kyverno
