@@ -132,7 +132,7 @@ def generate_uvl_from_crd(yaml_path, output_path):
     kind = crd.get("spec", {}).get("names", {}).get("kind", "UnknownKind")
     group = crd.get("spec", {}).get("group", "unknown.group")
     namespace_name = sanitize(group)
-    feature_lines = [f"namespace {namespace_name}", "features", "\tKyvernoClusterPolicies {abstract}", "\t\toptional"]
+    feature_lines = [f"namespace {namespace_name}", "features", "\tKyvernoCustomResourceDefinition {abstract}", "\t\toptional"]
 
     for version_entry in crd.get("spec", {}).get("versions", []):
         version = version_entry.get("name", "v1")

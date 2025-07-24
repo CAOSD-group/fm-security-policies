@@ -1,6 +1,6 @@
 namespace kyverno_io
 features
-	KyvernoClusterPolicies {abstract}
+	KyvernoCustomResourceDefinition {abstract}
 		optional
 			kyverno_io_v1_ClusterPolicy {doc 'ClusterPolicy declares validation, mutation, and generation behaviors for matching resources'}
 				mandatory

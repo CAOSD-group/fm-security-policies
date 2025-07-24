@@ -152,7 +152,18 @@ Integer io_k8s_api_core_v1_Pod_spec_initContainers_ports_hostPort {doc 'Number o
 
 io_k8s_api_core_v1_Pod_spec_securityContext_windowsOptions_hostProcess {doc 'HostProcess determines if a container should be run as a _Host Process_ container All of a Pod_s containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers) In addition, if HostProcess is true then HostNetwork must also be set to true'}
 
+En disallow-proc-mount se referencia a procMount, yo lo defini como un Bool para agregar una restriccion entre reglas del SO. Se personalizo y agrego nameStr para no perder el String de definicion...
+.securityContext.procMount must be unset or
+          set to `Default`.
+											io_k8s_api_core_v1_Pod_spec_ephemeralContainers_securityContext_procMount {abstract, doc 'procMount denotes the type of proc mount to use for the containers The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths This requires the ProcMountType feature flag to be enabled Note that this field cannot be set when specosname is windows'}
+												mandatory
+													String io_k8s_api_core_v1_Pod_spec_ephemeralContainers_securityContext_procMount_nameStr {doc 'Added String mandatory for changing booleans of boolean_keywords: string *_name'}
 
+restrict-sysctls
+									io_k8s_api_core_v1_Pod_spec_securityContext_sysctls cardinality [1..*] {doc 'Sysctls hold a list of namespaced sysctls used for the pod Pods with unsupported sysctls (by the container runtime) might fail to launch Note that this field cannot be set when specosname is windows'}
+										mandatory
+											String io_k8s_api_core_v1_Pod_spec_securityContext_sysctls_name {doc 'Name of a property to set'}
+											String io_k8s_api_core_v1_Pod_spec_securityContext_sysctls_value {doc 'Value of a property to set'}
 -- Hecho
 Por el momento la 1ºV parece que es válida
 (flamapyenv02) PS C:\Users\CAOSD\projects\fm-json-kubernetes\scripts\ci> py .\valid_model.py v1.30.2.kyverno

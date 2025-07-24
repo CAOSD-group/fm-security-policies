@@ -61,7 +61,11 @@ def extract_constraints_from_policy(filepath):
                     elif expected in ("true", "false"):
                         expr = f"{full_feature} = {expected}"
                     else:
-                        expr = f"{full_feature} == {expected}"
+                        # Si es un número (int o float), usar un único '='
+                        if re.match(r"^\d+(\.\d+)?$", str(expected).strip()):
+                            expr = f"{full_feature} = {expected}"
+                        else:
+                            expr = f"{full_feature} == {expected}"
                     grouped_conditions.setdefault(name, []).append(expr)
 
     return grouped_conditions
@@ -126,7 +130,7 @@ def extract_constraints_from_deny_conditions(policy):
                                     condition = f"{feature_base} = {v}"
                                 exprs_by_feature.setdefault(feature_base, []).append(condition)
 
-        # ✅ Agrupa correctamente todas las expresiones por feature
+        # Agroup the expressions by features
         all_exprs = []
         for base, conds in exprs_by_feature.items():
             if len(conds) > 1:
@@ -168,7 +172,6 @@ def extract_conditions_from_spec(obj, prefix="spec"):
             if isinstance(v, dict):
                 conditions.extend(extract_conditions_from_spec(v, new_prefix))
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
-                print(f"Valor elif  {v}")
                 conditions.extend(extract_conditions_from_spec(v[0], new_prefix))
             else:
                 if isinstance(v, str):
@@ -182,14 +185,11 @@ def extract_conditions_from_spec(obj, prefix="spec"):
                         v = v  # número como string, no cambiar
                     else:
                         v = f"'{v}'"
-                elif v == 0:
-                    print(f"Caso aqui   {k}   {v}")
-
                 elif isinstance(v, (int, float)):
+                    # print(f"SE DETECTA AQUI:Caso Int")
                     v = str(v)
                 else:
-                    # fallback por seguridad
-                    print(f"Valor else {v}")
+                    # fallback
                     v = f"'{str(v)}'"
                 conditions.append((new_prefix, v))
     return conditions
