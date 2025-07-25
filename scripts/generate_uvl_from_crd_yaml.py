@@ -33,9 +33,18 @@ def render_feature(entry, indent=2):
         attributes.append(f'default {val}')
 
     if doc:
-        attributes.append(f"doc '{clean_description(doc.strip())}'")
-    attr_str = f" {{{', '.join(attributes)}}}" if attributes else ""
+        if entry.get("x-kubernetes-preserve-unknown-fields") is True: ## New attribute for properties with x-kubernetes-preserve-unknown-fields: true
+            if entry.get("type") == 'object': ## Case of properties with partial validation and permissive unknow fields
+                print(f"Name de los objects con validacion parcial: {name}")
+                attributes.append(f"preserveUnknownFieldsX, doc '{clean_description(doc.strip())}'")
+            else:
+                attributes.append(f"preserveUnknownFields, doc '{clean_description(doc.strip())}'")
+        else:
+            attributes.append(f"doc '{clean_description(doc.strip())}'")
 
+        
+    attr_str = f" {{{', '.join(attributes)}}}" if attributes else ""
+    
     if entry.get("cardinality"):
         lines.append(f"{i}{name} cardinality {entry['cardinality']}{attr_str}")
     else:
@@ -43,13 +52,13 @@ def render_feature(entry, indent=2):
             lines.append(f"{i}{typename} {name}{attr_str}")
         else:
             lines.append(f"{i}{name}{attr_str}")
-
+    ## Detect de alternative values defined by the field enum:
     if enum:
         lines.append(i + "\talternative")
         for val in enum:
             enum_val = sanitize(f"{name}_{val}")
-            lines.append(f"{i}\t\t{enum_val}")
-    
+            lines.append(f"{i}\t\t{enum_val} {{doc 'Specific value: {val}'}}")
+
     if children:
         mand = [c for c in children if c.get("required")]
         opt = [c for c in children if not c.get("required")]
@@ -81,6 +90,8 @@ def extract_features(schema, parent_name="", required_fields=None):
             "enum": value.get("enum", []),
             "required": key in required_fields,
             "children": [],
+            "x-kubernetes-preserve-unknown-fields": value.get("x-kubernetes-preserve-unknown-fields"),
+
         }
 
         if value.get("type") == "object" and "properties" in value:
@@ -166,9 +177,9 @@ def generate_uvl_from_crd(yaml_path, output_path):
 
 # Uso de prueba:
 if __name__ == "__main__":
+    #yaml_path="../resources/kyverno_crds_definitions/policies.kyverno.io_validatingpolicies.yaml",
+    ## policies.kyverno.io_validatingpolicies
     generate_uvl_from_crd(
         yaml_path="../resources/kyverno_crds_definitions/kyverno.io_clusterpolicies.yaml",
-        #yaml_path="../resources/kyverno_crds_definitions/policies.kyverno.io_validatingpolicies.yaml",
-        ## policies.kyverno.io_validatingpolicies
         output_path="../variability_model/kyverno_clusterpolicy_test2.uvl"
     )

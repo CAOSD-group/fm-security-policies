@@ -24,8 +24,8 @@ import gc
 import shutil
 
 # Base path where the buckets are sorted by size
-yaml_base_directory = '../../resources/yamls_agrupation' ## Add zip of files?
-csv_kinds_versions = '../../resources/mapping_csv/generateConfigs/kinds_versions_detected.csv'
+yaml_base_directory = '../resources/kyverno_policies_yamls' ## 
+csv_kinds_versions = '../resources/mapping_csv/kinds_versions_detected.csv'
 # Valids buckets
 buckets = ['tiny', 'small', 'medium', 'large', 'huge']
 
@@ -375,6 +375,14 @@ def search_features_in_csv(hierarchical_props, key_value_pairs, csv_dict):
                 elif middle.strip() and turned == "isEmpty02" and feature not in feature_map and aux_hierchical_maps.endswith(hierarchical_prop):
                     aux_hierchical_is_empty = f"{hierarchical_prop}_isEmpty02" ## The _isEmpty is created manually because it is a custom feature of the model. It is used to refer to the features with empty value in the properties. It is added to be able to reference such non-value...
                     feature_map[aux_hierchical_is_empty] = feature
+                # Representation of the selected values, it is checked if any yaml value matches the last part...
+                elif value == "preserveUnknownFields" and feature not in feature_map: # preserveUnknownFieldsX
+                    pass
+                    ## Definir funcionamiento para marcar el preserveUnknownFields como
+                    # Evitamos mapear el contenido: solo dejamos la clave principal como bool True
+                    #new_data[value_features] = True
+                    #auxFeaturesAddedList.add(value_features)
+                    #aux_hierchical_prop.append(key_features)
 
                 for key, yaml_value in key_value_pairs:
                     if value and str(yaml_value) == value and feature not in feature_map: ## Try to avoid adding the same feature
@@ -428,7 +436,7 @@ def apply_feature_mapping(yaml_data, feature_map, auxFeaturesAddedList, aux_hier
         new_data = {}
         possible_type_data = ['asString', 'asNumber', 'asInteger']
         yaml_with_error_type = False
-
+        #print(f"YAML DICT: {yaml_data}")
         for key, value in yaml_data.items():
             aux_nested = False ## boolean to determine if a property has a feature value
             aux_array = False ## boolean to determine if a property contains an array or is an array of features
@@ -445,13 +453,14 @@ def apply_feature_mapping(yaml_data, feature_map, auxFeaturesAddedList, aux_hier
             feature_type_array = []
             feature_empty = {}
             feature_null = {}
-
+            
             if isinstance(value, datetime): ## Checking if any of the values are of type Time RCF 3339
                 value = value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
             if isinstance(key, str) and key == 'clusterName': ## It checks if any keys match 'clusterName' to omit the field directly. Prop does not validate in schema or doc
                 continue
+            print(f"FEAUTRE MAP {feature_map}")
             for key_features, value_features in feature_map.items():
-               
+                
                 # Normal logic for string type values, the value of the key is changed directly
                 if isinstance(value_features, str) and value_features.endswith(key) and value_features not in auxFeaturesAddedList:
 
@@ -676,6 +685,13 @@ def apply_feature_mapping(yaml_data, feature_map, auxFeaturesAddedList, aux_hier
                         feature_null[value_features] = aux_feat_null
                         auxFeaturesAddedList.add(value_features)
                         aux_hierchical_prop.append(key_features)
+                # Representation of the selected values, it is checked if any yaml value matches the last part...
+                elif isinstance(value_features, str) and value_features.split("_")[-1] in ["preserveUnknownFields", "preserveUnknownFieldsX"] and value_features not in auxFeaturesAddedList:
+                    # Evitamos mapear el contenido: solo dejamos la clave principal como bool True
+                    new_data[value_features] = True
+                    auxFeaturesAddedList.add(value_features)
+                    aux_hierchical_prop.append(key_features)
+                    continue  # saltar hijos
 
             mapped_key = feature_map.get(key, key)
             aux_arr_key = None
@@ -726,19 +742,21 @@ def apply_feature_mapping(yaml_data, feature_map, auxFeaturesAddedList, aux_hier
 
 ## route of the downloaded yamls: C:\projects\kubernetes_fm\scripts\download_manifests\YAMLs
 # Read YAMLs and extract properties
-yaml_data_list = iterate_all_buckets(yaml_base_directory, buckets)
+## yaml_data_list = yaml_base_directory ## = iterate_all_buckets(yaml_base_directory, buckets)
+yaml_data_list = read_yaml_files_from_directory(yaml_base_directory)
+
 # Save folder output with JSON files
-output_json_dir = '../../resources/mapping_csv/generateConfigs/outputs_json_mappeds'
+output_json_dir = '../resources/kyverno_policies_jsons' ## disallow-host-namespaces
 #output_invalid_kinds_versions = './generateConfigs/outputs_no_validkinds_versions'
 os.makedirs(output_json_dir, exist_ok=True)  # Create the folder if it does not exist
 # Prepare structure for JSONs
 #output_data = []
 file_count = {}  # To handle multiple documents
 # CSV file path
-csv_file_path = '../../respurces/mapping_csv/kubernetes_mapping_properties_features.csv'
+csv_file_path = '../resources/mapping_csv/kyverno_mapping_properties_features.csv'
 csv_dict = load_features_csv(csv_file_path)
 
-for filename, index, yaml_data, simple_props, hierarchical_props, key_value_pairs, root_info in yaml_data_list:    
+for filename, index, yaml_data, simple_props, hierarchical_props, key_value_pairs, root_info in yaml_data_list: ## yaml_data_list:    
     auxFeaturesAddedList = set()
     mapped_key = {}
     aux_hierchical = []
